@@ -8,9 +8,9 @@ with sq.connect("Ships_Icebreakers.db") as con:
     # ледовая обстановка, 0 если не СМП (INT)
     cur.execute("DROP TABLE IF EXISTS edges")
     cur.execute("""CREATE TABLE IF NOT EXISTS edges(
+        edge_type TEXT,
         edge_id INTEGER PRIMARY KEY AUTOINCREMENT,
         ice_condition INTEGER DEFAULT 0,
-        edge_type TEXT,
         length INTEGER,
         incident_nodes TEXT,
         max_throughput INTEGER,
@@ -85,9 +85,3 @@ with sq.connect("Ships_Icebreakers.db") as con:
     node_id INTEGER PRIMARY KEY AUTOINCREMENT,
     coordinates TEXT
     )""")
-    def full_info():
-        cur.execute(SELECT * FROM edges)
-        cur.execute(SELECT * FROM ship)
-        cur.execute(SELECT * FROM consignment)
-        cur.execute(SELECT * FROM icebreaker)
-        cur.execute(SELECT * FROM node)#вытащить все таблицы
