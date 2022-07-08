@@ -163,3 +163,26 @@ class node: #node = узел
             cur = con.cursor()
             cur.execute(f"""UPDATE node
             SET coordinates = {self.coordinates}, node_id = {self.node_id}, """)
+def full_info():
+    with sq.connect("Ships_Icebreakers.db") as con:
+        cur = con.cursor()
+        cur.execute("SELECT * FROM edges")
+        result = cur.fetchall()
+        for row in result:
+            edges(*row)
+        cur.execute("SELECT * FROM ship")
+        result = cur.fetchall()
+        for row in result:
+            ship(*row)
+        cur.execute("SELECT * FROM consignment")
+        result = cur.fetchall()
+        for row in result:
+            consignment(*row)
+        cur.execute("SELECT * FROM icebreaker")
+        result = cur.fetchall()
+        for row in result:
+            icebreaker(*row)
+        cur.execute("SELECT * FROM node")
+        result = cur.fetchall()
+        for row in result:
+            node(*row)
