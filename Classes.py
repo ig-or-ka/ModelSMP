@@ -1,7 +1,6 @@
 import sqlite3 as sq
 
-coordinates = "0.000000, 0.000000" #комментарий от Васи: тут короче мы меняем координаты(вчера об этом говорили на созвоне) будем просто в пикселях использовать от 0 до напимер 900 по ширине
-
+#комментарий от Васи: тут короче мы меняем координаты(вчера об этом говорили на созвоне) будем просто в пикселях использовать от 0 до напимер 900 по ширине
 
 class indexes:
     edges = dict()
@@ -42,7 +41,7 @@ class edges: #edges = ребра
             """)
 
 class ship: #ship = корабль
-    def __init__(self, ship_id = None, edge_position = 1, edge_id = -1, port_id = 1, in_port = True, icebreaker_id = 1, max_capacity = 1, node_id = 1, cargo_type = "", caravan_condition = True):
+    def __init__(self, ship_id = None, edge_position = 1, edge_id = -1, port_id = 1, in_port = True, icebreaker_id = 1, max_capacity = 1, node_id = 1, coordinates = 0, cargo_type = "", caravan_condition = True):
         self.ship_id = ship_id
         self.edge_position = edge_position
         self.edge_id = edge_id
@@ -77,7 +76,7 @@ class ship: #ship = корабль
             """)
 
 class consignment: #consignment = партия груза
-    def __init__(self, cargo_id = None, size = 1, node_destination_id = 1, ship_immediately = True, type_refer = 1, id_refer = 1, contracted = True):
+    def __init__(self, cargo_id = None, size = 1, node_destination_id = 1, ship_immediately = True, type_refer = 1, id_refer = 1, coordinates = 0, contracted = True):
         self.cargo_id = cargo_id
         self.size = size
         self.node_destination_id = node_destination_id
@@ -141,7 +140,7 @@ class icebreaker: #icebreaker = ледокол
             """)
 
 class node: #node = узел
-    def __init__(self, node_id = None):
+    def __init__(self, coordinates = 0, node_id = None):
         self.coordinates = coordinates
         self.node_id = node_id
         if node_id != None:
