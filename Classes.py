@@ -12,6 +12,7 @@ class indexes:
 class edges: #edges = ребра
     # incident_nodes: "*id_begin_node*_*id_end_node*"
     # tariff: "*tariff_cont*_*tariff_oil*_*tariff_weight*"
+    # edge_types: sea, train, pipe, loading
     def __init__(self, edge_type = "sea", edge_id = None, ice_condition = 1, length = 1, incident_nodes = "0_0", max_throughput = 1, tariff = "0_0_0"):
         self.edge_type = edge_type
         self.edge_id = edge_id
@@ -111,9 +112,11 @@ class consignment: #consignment = партия груза
         self.type_refer = type_refer
         self.id_refer = id_refer
         self.coordinates = coordinates
-        self.contracted = bool(contracted)
+        self.contracted = bool(contracted)        
         if cargo_id != None:
             indexes.consignment[cargo_id] = self
+
+        self.way = None
     def create(self):
         #вытаскиваем поля из таблицы с помощью select и increment counter
         with sq.connect("Ships_Icebreakers.db") as con:
@@ -186,6 +189,8 @@ class node: #node = узел
         self.node_id = node_id
         if node_id != None:
             indexes.node[node_id] = self
+
+        self.edges_list = dict()
     def create(self):
         #вытаскиваем поля из таблицы с помощью select и increment counter
         with sq.connect("Ships_Icebreakers.db") as con:
@@ -235,3 +240,12 @@ def full_info():
         for row in result:
             #print(row)
             node(*row)
+
+def preparing():
+    for edge_id in indexes.edges:
+        edge: edges = indexes.edges[edge_id]
+        node_b: node = indexes.node[edge.id_begin_node]
+        node_e: node = indexes.node[edge.id_end_node]
+
+        node_b.edges_list[node_e.node_id] = edge
+        node_e.edges_list[node_b.node_id] = edge
