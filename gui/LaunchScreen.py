@@ -17,6 +17,7 @@ class Application:
     window_height = 630
     element_pad = 10
     node_radius = 5
+    goods_radius = 3
     edge_min_width = 1
     edge_max_width = 10
 
@@ -70,12 +71,10 @@ class Application:
                               y=self.map_height + self.element_pad)  # self.button_plus.winfo_rootx() + self.button_plus.winfo_width() + self.element_pad
         self.list_goods.current(0)
 
-
         # Отрисовываем граф
         # рисуем сначала ребра, чтобы потом узлы отрисовывались поверх
         self.draw_edges(edges_default, nodes_default, edges_width_default)
         self.draw_nodes(nodes_default)
-
 
     def add_goods(self, goods):
         self.goods.append(goods)
@@ -92,8 +91,28 @@ class Application:
             self.counter -= 1
             self.count_label.config(text=f"{self.counter}")
 
-    def draw_goods(self, edge):
-        pass
+    goods = []
+
+    def draw_goods(self, edge, percent, id):  # тут возможно еще надо передавать сам груз, какую то инфу о нем, чтоб я добавлял его в список. пока я просто его айди передаю
+        node_a = nodes_default[edge.id_begin_node]
+        node_b = nodes_default[edge.id_end_node]
+
+        x = node_a[0] + (node_b[0] - node_a[0]) * percent
+        y = node_a[1] + (node_b[1] - node_a[1]) * percent
+
+        oval = self.canvas.create_oval(x - self.goods_radius, y - self.goods_radius,
+                                       x + self.goods_radius, y + self.goods_radius,
+                                       outline=self.goods_color, fill=self.goods_color)
+
+        if id < len(self.goods):
+            self.canvas.delete(self.goods[id])
+            self.goods[id] = oval
+        else:
+            self.goods.append(oval)
+
+
+
+
 
     def draw_ship(self):
         pass
@@ -148,6 +167,7 @@ def callback(e):
     y = e.y
     print("Pointer is currently at %d, %d" % (x, y))
 
+
 def click(e):
     x = e.x
     y = e.y
@@ -157,5 +177,9 @@ def click(e):
 # запускать тут (для теста)
 if __name__ == '__main__':
     app = Application()
+
+    # тут пример просто, груз пробегает от 13 до 14 узла, но без пауз, так что почти незаметно
+    for i in range(0, 100):
+        app.draw_goods(edges(incident_nodes="13_14"), i / 100, 0)
 
     app.end_drawing()
