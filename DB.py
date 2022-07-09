@@ -51,6 +51,7 @@ with sq.connect("Ships_Icebreakers.db") as con:
     #cur.execute("DROP TABLE IF EXISTS consignment")
     cur.execute("""CREATE TABLE IF NOT EXISTS consignment(
         cargo_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cargo_type TEXT,
         size INTEGER,
         node_destination_id INTEGER,
         ship_immediately BOOLEAN,

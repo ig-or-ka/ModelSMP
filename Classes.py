@@ -99,8 +99,12 @@ class ship: #ship = корабль
             """)
 
 class consignment: #consignment = партия груза
-    def __init__(self, cargo_id = None, size = 1, node_destination_id = 1, ship_immediately = True, type_refer = 1, id_refer = 1, coordinates = 0, contracted = True):
+    # cont - контейнер
+    # oil - нефть
+    # weight - весовой груз
+    def __init__(self, cargo_id = None, cargo_type = "cont", size = 1, node_destination_id = 1, ship_immediately = True, type_refer = 1, id_refer = 1, coordinates = 0, contracted = True):
         self.cargo_id = cargo_id
+        self.cargo_type = cargo_type
         self.size = size
         self.node_destination_id = node_destination_id
         self.ship_immediately = bool(ship_immediately)
@@ -114,7 +118,7 @@ class consignment: #consignment = партия груза
         #вытаскиваем поля из таблицы с помощью select и increment counter
         with sq.connect("Ships_Icebreakers.db") as con:
             cur = con.cursor()
-            cur.execute(f"insert into consignment (size, node_destination_id, ship_immediately, type_refer, id_refer, coordinates, contracted) values ('{self.size}', '{self.node_destination_id}', '{int(self.ship_immediately)}', '{self.type_refer}', '{self.id_refer}', '{self.coordinates}', '{int(self.contracted)}')")
+            cur.execute(f"insert into consignment (cargo_type, size, node_destination_id, ship_immediately, type_refer, id_refer, coordinates, contracted) values ('{self.cargo_type}', '{self.size}', '{self.node_destination_id}', '{int(self.ship_immediately)}', '{self.type_refer}', '{self.id_refer}', '{self.coordinates}', '{int(self.contracted)}')")
             cur.execute("select count(*) from consignment")      
             result = cur.fetchone()
             self.cargo_id = result[0]
@@ -125,6 +129,7 @@ class consignment: #consignment = партия груза
             cur = con.cursor()
             cur.execute(f"""UPDATE consignment
                         SET
+                        cargo_type = '{self.cargo_type}',
                         size = {self.size},
                         node_destination_id = {self.node_destination_id},
                         ship_immediately = {int(self.ship_immediately)},
