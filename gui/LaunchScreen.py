@@ -5,19 +5,8 @@ from PIL import Image, ImageTk
 # и когда установится, то обратно замените pillow на PIL
 from PIL.Image import Resampling
 from tkinter import ttk
+from gui.values import *
 from Classes import edges
-
-# здесь координаты узлов
-nodes_default = [(235, 207), (275, 239), (261, 252), (250, 261), (233, 233), (299, 219), (321, 217),
-                 (339, 203), (378, 194), (410, 163), (412, 201), (426, 224), (500, 164), (585, 185),
-                 (739, 207), (774, 212), (800, 257), (778, 241), (773, 263), (700, 334), (596, 392)]
-
-# ребра между узлами из списка выше
-edges_default = [(0, 1), (1, 2), (2, 3), (2, 4), (3, 4), (0, 5), (1, 5), (5, 6), (6, 7), (7, 8), (8, 9), (9, 10), (10, 11),
-                 (9, 12), (12, 13), (13, 14), (14, 15), (15, 16), (16, 17), (16, 18), (17, 18), (16, 19), (17, 19), (18, 19),
-                 (19, 20)]
-# ширина ребер
-edges_width_default = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
 
 class Application:
@@ -48,6 +37,8 @@ class Application:
         self.window = Tk()
 
         # self.window.bind('<Motion>', callback)
+        self.window.bind('<Button-1>', click)
+
         self.window.title("СМП путь")
         self.window.geometry(f"{self.window_width}x{self.window_height}+400+60")
 
@@ -78,6 +69,13 @@ class Application:
         self.list_goods.place(x=150,
                               y=self.map_height + self.element_pad)  # self.button_plus.winfo_rootx() + self.button_plus.winfo_width() + self.element_pad
         self.list_goods.current(0)
+
+
+        # Отрисовываем граф
+        # рисуем сначала ребра, чтобы потом узлы отрисовывались поверх
+        self.draw_edges(edges_default, nodes_default, edges_width_default)
+        self.draw_nodes(nodes_default)
+
 
     def add_goods(self, goods):
         self.goods.append(goods)
@@ -150,13 +148,14 @@ def callback(e):
     y = e.y
     print("Pointer is currently at %d, %d" % (x, y))
 
+def click(e):
+    x = e.x
+    y = e.y
+    print("Pointer is currently at %d, %d" % (x, y))
+
 
 # запускать тут (для теста)
 if __name__ == '__main__':
     app = Application()
-
-    # рисуем сначала ребра, чтобы потом узлы отрисовывались поверх
-    app.draw_edges(edges_default, nodes_default, edges_width_default)
-    app.draw_nodes(nodes_default)
 
     app.end_drawing()

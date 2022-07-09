@@ -1,5 +1,5 @@
 import Classes
-from gui.LaunchScreen import nodes_default, edges_default, edges_width_default
+from gui.values import *
 
 
 #---------------------от Васи: сделал модель, как я понял---------------------------------------------
