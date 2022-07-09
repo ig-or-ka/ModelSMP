@@ -71,6 +71,10 @@ class ship: #ship = корабль
         self.caravan_condition = bool(caravan_condition)
         if ship_id != None:
             indexes.ship[ship_id] = self
+
+        self.way = []
+        self.cargos = []
+        self.fill_count = 0
     def create(self):
         #вытаскиваем поля из таблицы с помощью select и increment counter
         with sq.connect("Ships_Icebreakers.db") as con:
@@ -191,6 +195,7 @@ class node: #node = узел
             indexes.node[node_id] = self
 
         self.edges_list = dict()
+        self.allow_ships = {'cont':[],'oil':[],'weight':[]}
     def create(self):
         #вытаскиваем поля из таблицы с помощью select и increment counter
         with sq.connect("Ships_Icebreakers.db") as con:
@@ -249,3 +254,16 @@ def preparing():
 
         node_b.edges_list[node_e.node_id] = edge
         node_e.edges_list[node_b.node_id] = edge
+
+    for ship_id in indexes.ship:
+        ship_o: ship = indexes.ship[ship_id]
+        if ship_o.in_port:
+            node_o: node = indexes.node[ship_o.port_id]
+            node_o.allow_ships[ship_o.cargo_type].append(ship_o)
+
+    for cargo_id in indexes.consignment:
+        cargo: consignment = indexes.consignment[cargo_id]
+        if cargo.type_refer == 3:
+            ship_o: ship = indexes.ship[cargo.id_refer]
+            ship_o.cargos.append(cargo)
+            ship_o.fill_count += cargo.size
