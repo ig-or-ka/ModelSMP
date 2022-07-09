@@ -5,6 +5,19 @@ from PIL import Image, ImageTk
 # и когда установится, то обратно замените pillow на PIL
 from PIL.Image import Resampling
 from tkinter import ttk
+from Classes import edges
+
+# здесь координаты узлов
+nodes_default = [(235, 207), (275, 239), (261, 252), (250, 261), (233, 233), (299, 219), (321, 217),
+                 (339, 203), (378, 194), (410, 163), (412, 201), (426, 224), (500, 164), (585, 185),
+                 (739, 207), (774, 212), (800, 257), (778, 241), (773, 263), (700, 334), (596, 392)]
+
+# ребра между узлами из списка выше
+edges_default = [(0, 1), (1, 2), (2, 3), (2, 4), (3, 4), (0, 5), (1, 5), (5, 6), (6, 7), (7, 8), (8, 9), (9, 10), (10, 11),
+                 (9, 12), (12, 13), (13, 14), (14, 15), (15, 16), (16, 17), (16, 18), (17, 18), (16, 19), (17, 19), (18, 19),
+                 (19, 20)]
+# ширина ребер
+edges_width_default = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
 
 class Application:
@@ -20,7 +33,10 @@ class Application:
 
     # Цвета
     node_color = "red"
-    edge_color = "blue"
+    edge_sea_color = "blue"
+    edge_train_color = "green"
+    edge_pipe_color = "orange"
+    edge_loading_color = "gray"
     goods_color = "brown"
     ship_color = "gray"
     icebreaker_color = "black"
@@ -30,6 +46,8 @@ class Application:
 
     def __init__(self):
         self.window = Tk()
+
+        # self.window.bind('<Motion>', callback)
         self.window.title("СМП путь")
         self.window.geometry(f"{self.window_width}x{self.window_height}+400+60")
 
@@ -57,7 +75,8 @@ class Application:
         self.goods = []
 
         self.list_goods = ttk.Combobox(self.window, values=[1, 2, 3, 4, 5])
-        self.list_goods.place(x=150, y=self.map_height + self.element_pad)  #self.button_plus.winfo_rootx() + self.button_plus.winfo_width() + self.element_pad
+        self.list_goods.place(x=150,
+                              y=self.map_height + self.element_pad)  # self.button_plus.winfo_rootx() + self.button_plus.winfo_width() + self.element_pad
         self.list_goods.current(0)
 
     def add_goods(self, goods):
@@ -75,7 +94,7 @@ class Application:
             self.counter -= 1
             self.count_label.config(text=f"{self.counter}")
 
-    def draw_goods(self):
+    def draw_goods(self, edge):
         pass
 
     def draw_ship(self):
@@ -98,8 +117,15 @@ class Application:
                                        x + self.node_radius, y + self.node_radius,
                                        outline=color, fill=color)
 
-    def draw_edge(self, node_a, node_b, width, color=edge_color):
-        return self.canvas.create_line(node_a[0], node_a[1], node_b[0], node_b[1], width=width, fill=color)
+    def draw_edge(self, node_a, node_b, width, node_type="sea"):
+        color = {
+            "sea": self.edge_sea_color,
+            "train": self.edge_train_color,
+            "pipe": self.edge_pipe_color,
+            "loading": self.edge_loading_color
+        }
+
+        return self.canvas.create_line(node_a[0], node_a[1], node_b[0], node_b[1], width=width, fill=color[node_type])
 
     def draw_nodes(self, nodes):
         for node in nodes:
@@ -119,20 +145,18 @@ class Application:
         self.window.mainloop()
 
 
+def callback(e):
+    x = e.x
+    y = e.y
+    print("Pointer is currently at %d, %d" % (x, y))
+
+
 # запускать тут (для теста)
 if __name__ == '__main__':
-    # здесь координаты узлов
-    nodes = [(200, 300), (400, 450), (800, 200), (730, 500), (530, 400)]
-
-    # ребра между узлами из списка выше
-    edges = [(0, 4), (0, 1), (0, 4), (1, 2), (3, 4), (0, 2)]
-    # ширина ребер
-    edges_width = [1, 4, 6, 2, 9, 5]
-
     app = Application()
 
     # рисуем сначала ребра, чтобы потом узлы отрисовывались поверх
-    app.draw_edges(edges, nodes, edges_width)
-    app.draw_nodes(nodes)
+    app.draw_edges(edges_default, nodes_default, edges_width_default)
+    app.draw_nodes(nodes_default)
 
     app.end_drawing()
