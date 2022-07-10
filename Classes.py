@@ -13,7 +13,7 @@ class edges: #edges = ребра
     # incident_nodes: "*id_begin_node*_*id_end_node*"
     # tariff: "*tariff_cont*_*tariff_oil*_*tariff_weight*"
     # edge_types: sea, train, pipe, loading
-    def __init__(self, edge_type = "sea", edge_id = None, ice_condition = 1, length = 1, incident_nodes = "0_0", max_throughput = 1, tariff = "0_0_0"):
+    def __init__(self, edge_type = "sea", edge_id = None, ice_condition = 0, length = 1, incident_nodes = "0_0", max_throughput = 1, tariff = "0_0_0"):
         self.edge_type = edge_type
         self.edge_id = edge_id
         self.ice_condition = ice_condition
@@ -159,6 +159,11 @@ class icebreaker: #icebreaker = ледокол
         self.shipsin_caravan = bool(shipsin_caravan)
         if icebreaker_id != None:
             indexes.icebreaker[icebreaker_id] = self
+
+        self.caravan_ships = []
+        self.max_caravan_ships = 10
+        self.time_wait_caravan = 5
+        self.ticks_wait = 0
     def create(self):
         #вытаскиваем поля из таблицы с помощью select и increment counter
         with sq.connect("Ships_Icebreakers.db") as con:
@@ -195,7 +200,7 @@ class node: #node = узел
             indexes.node[node_id] = self
 
         self.edges_list = dict()
-        self.allow_ships = {'cont':[],'oil':[],'weight':[]}
+        self.allow_ships = {'cont':[],'oil':[],'weight':[],'iceb':[]}
     def create(self):
         #вытаскиваем поля из таблицы с помощью select и increment counter
         with sq.connect("Ships_Icebreakers.db") as con:
@@ -260,6 +265,10 @@ def preparing():
         if ship_o.in_port:
             node_o: node = indexes.node[ship_o.port_id]
             node_o.allow_ships[ship_o.cargo_type].append(ship_o)
+        if ship_o.caravan_condition:
+            icebr: icebreaker = indexes.icebreaker[ship_o.icebreaker_id]
+            icebr.caravan_ships.append(ship_o)
+            
 
     for cargo_id in indexes.consignment:
         cargo: consignment = indexes.consignment[cargo_id]
@@ -267,3 +276,10 @@ def preparing():
             ship_o: ship = indexes.ship[cargo.id_refer]
             ship_o.cargos.append(cargo)
             ship_o.fill_count += cargo.size
+    
+    for iceb_id in indexes.icebreaker:
+        iceb: icebreaker = indexes.icebreaker[iceb_id]
+        if iceb.prepare_caravan:
+            node_b: node = indexes.node[iceb.port_id]
+            node_b.allow_ships["iceb"].append(iceb)
+            

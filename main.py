@@ -95,10 +95,32 @@ def cargos_move():
             #cargo.update()
         #если груз на корабле, то на данном шаге ничего не делаем
 
+def unloading_ship(ship: Classes.ship, this_node: Classes.node):
+    print(f"Корабль {ship.ship_id} причалил к узлу {this_node.node_id}")
+
+    ship.in_port = True
+    ship.port_id = this_node.node_id
+    this_node.allow_ships[ship.cargo_type].append(ship)
+
+    for cargo in list(ship.cargos):
+        out_cargo = len(cargo.way) == 0
+        if not out_cargo:
+            next_edge: Classes.edges = this_node.edges_list[cargo.way[0]]
+            out_cargo = next_edge.edge_type != "sea"
+        if out_cargo:
+            ship.cargos.remove(cargo)
+            ship.fill_count -= cargo.size
+            cargo.type_refer = 1
+            cargo.id_refer = this_node.node_id
+            print(f"Груз {cargo.cargo_id} доставлен на узел {this_node.node_id}")
+        else:
+            del cargo.way[0]
 
 def ships_move():
     for ship_id in Classes.indexes.ship:
         ship:Classes.ship = Classes.indexes.ship[ship_id]
+        if ship.caravan_condition:
+            continue
         if ship.in_port:
             if ship.fill_count > 0:
                 this_node: Classes.node = Classes.indexes.node[ship.port_id]
@@ -107,14 +129,26 @@ def ships_move():
 
                 next_edge: Classes.edges = this_node.edges_list[next_node_id]
 
-                this_node.allow_ships[ship.cargo_type].remove(ship)
-                ship.in_port = False
-                ship.edge_id = next_edge.edge_id
-                if this_node.node_id == next_edge.id_begin_node:
-                    ship.coordinates = 1
+                if next_edge.ice_condition == 1:
+                    # прикрепляем к каравану
+                    for iceb in this_node.allow_ships["iceb"]:
+                        if iceb.node_destination_id == next_node_id and iceb.max_caravan_ships >= len(iceb.caravan_ships) + 1:
+                            iceb.caravan_ships.append(ship)
+                            ship.caravan_condition = True
+                            ship.icebreaker_id = iceb.icebreaker_id
+                            print(f"Корабль {ship_id} привязан к ледоколу {iceb.icebreaker_id}")
+                            break
+                    else:
+                        ship.way.insert(0,next_node_id)
                 else:
-                    ship.coordinates = -1
-                print(f"Корабль {ship_id} отчалил к узлу {next_node_id}")
+                    this_node.allow_ships[ship.cargo_type].remove(ship)
+                    ship.in_port = False
+                    ship.edge_id = next_edge.edge_id
+                    if this_node.node_id == next_edge.id_begin_node:
+                        ship.coordinates = 1
+                    else:
+                        ship.coordinates = -1
+                    print(f"Корабль {ship_id} отчалил к узлу {next_node_id}")
         else:
             this_edge: Classes.edges = Classes.indexes.edges[ship.edge_id]
             vec = ship.coordinates // abs(ship.coordinates)
@@ -126,26 +160,51 @@ def ships_move():
                 else:
                     this_node_id = this_edge.id_begin_node
                 this_node = Classes.indexes.node[this_node_id]
+                unloading_ship(ship,this_node)
 
-                print(f"Корабль {ship_id} причалил к узлу {this_node_id}")
+    for iceb_id in Classes.indexes.icebreaker:
+        iceb: Classes.icebreaker = Classes.indexes.icebreaker[iceb_id]
+        if iceb.prepare_caravan:
+            if len(iceb.caravan_ships) != 0:
+                iceb.ticks_wait += 1
+                print(f'Ледокол {iceb.icebreaker_id} собирает караван {iceb.ticks_wait} из {iceb.time_wait_caravan}')
+                if iceb.ticks_wait == iceb.time_wait_caravan or len(iceb.caravan_ships) == iceb.max_caravan_ships:
+                    print(f'Ледокол {iceb.icebreaker_id} отчалил в порт {iceb.node_destination_id}')
+                    this_node: Classes.node = Classes.indexes.node[iceb.port_id]
+                    next_edge: Classes.edges = this_node.edges_list[iceb.node_destination_id]
 
-                ship.in_port = True
-                ship.port_id = this_node_id
-                this_node.allow_ships[ship.cargo_type].append(ship)
+                    iceb.prepare_caravan = False
+                    iceb.edge_position = 0
+                    iceb.edge_id = next_edge.edge_id
+                    this_node.allow_ships["iceb"].remove(iceb)
+                    
+                    for ship in iceb.caravan_ships:
+                        this_node.allow_ships[ship.cargo_type].remove(ship)
+                        ship.in_port = False
+        else:
+            this_edge: Classes.edges = Classes.indexes.edges[iceb.edge_id]
+            iceb.edge_position += 100 / this_edge.length
+            print(f'Ледокол {iceb.icebreaker_id} на ребре {this_edge.edge_id} {iceb.edge_position}')
+            if abs(iceb.edge_position) >= 100: 
+                # ледокол прибыл в порт
+                print(f'Ледокол {iceb.icebreaker_id} прибыл в порт {iceb.node_destination_id}')
+                
+                iceb.prepare_caravan = True
+                iceb.port_id = iceb.node_destination_id
+                this_node: Classes.node = Classes.indexes.node[iceb.port_id]
+                if this_edge.id_begin_node == iceb.node_destination_id:
+                    iceb.node_destination_id = this_edge.id_end_node
+                else:
+                    iceb.node_destination_id = this_edge.id_begin_node
+                iceb.ticks_wait = 0
+                this_node.allow_ships["iceb"].append(iceb)
 
-                for cargo in list(ship.cargos):
-                    out_cargo = len(cargo.way) == 0
-                    if not out_cargo:
-                        next_edge: Classes.edges = this_node.edges_list[cargo.way[0]]
-                        out_cargo = next_edge.edge_type != "sea"
-                    if out_cargo:
-                        ship.cargos.remove(cargo)
-                        ship.fill_count -= cargo.size
-                        cargo.type_refer = 1
-                        cargo.id_refer = this_node_id
-                        print(f"Груз {cargo.cargo_id} доставлен на узел {this_node_id}")
-                    else:
-                        del cargo.way[0]
+                # разгрузка кораблей
+                for ship in iceb.caravan_ships:
+                    ship.caravan_condition = False
+                    unloading_ship(ship,this_node)
+                iceb.caravan_ships = []
+
 time_tick = 1
 
 while True:
