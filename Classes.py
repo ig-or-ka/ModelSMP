@@ -13,7 +13,7 @@ class edges: #edges = ребра
     # incident_nodes: "*id_begin_node*_*id_end_node*"
     # tariff: "*tariff_cont*_*tariff_oil*_*tariff_weight*"
     # edge_types: sea, train, pipe, loading
-    def __init__(self, edge_type = "sea", edge_id = None, ice_condition = 0, length = 1, incident_nodes = "0_0", max_throughput = 1, tariff = "0_0_0"):
+    def __init__(self, edge_type = "sea", edge_id = None, ice_condition = 0, length = 1, incident_nodes = "0_0", tariff = "0_0_0"):
         self.edge_type = edge_type
         self.edge_id = edge_id
         self.ice_condition = ice_condition
@@ -22,8 +22,6 @@ class edges: #edges = ребра
         segs = incident_nodes.split('_')
         self.id_begin_node = int(segs[0])
         self.id_end_node = int(segs[1])
-
-        self.max_throughput = max_throughput
 
         segs = tariff.split('_')
         self.tariff_cont = int(segs[0])
@@ -36,7 +34,7 @@ class edges: #edges = ребра
         #вытаскиваем поля из таблицы с помощью select и increment counter
         with sq.connect("Ships_Icebreakers.db") as con:
             cur = con.cursor()
-            cur.execute(f"insert into edges (edge_type, ice_condition, length, incident_nodes, max_throughput, tariff) values ('{self.edge_type}','{self.ice_condition}', '{self.length}', '{self.id_begin_node}_{self.id_end_node}', '{self.max_throughput}', '{self.tariff_cont}_{self.tariff_oil}_{self.tariff_weight}')")
+            cur.execute(f"insert into edges (edge_type, ice_condition, length, incident_nodes, tariff) values ('{self.edge_type}','{self.ice_condition}', '{self.length}', '{self.id_begin_node}_{self.id_end_node}', '{self.tariff_cont}_{self.tariff_oil}_{self.tariff_weight}')")
             cur.execute("select count(*) from edges")      
             result = cur.fetchone()
             self.edge_id = result[0]
@@ -51,13 +49,12 @@ class edges: #edges = ребра
                         ice_condition = {self.ice_condition},
                         length = {self.length},
                         incident_nodes = '{self.id_begin_node}_{self.id_end_node}',
-                        max_throughput = {self.max_throughput},
                         tariff = '{self.tariff_cont}_{self.tariff_oil}_{self.tariff_weight}'
                         WHERE edge_id = {self.edge_id}
             """)
 
 class ship: #ship = корабль
-    def __init__(self, ship_id = None, edge_position = 1, edge_id = -1, port_id = 1, in_port = True, icebreaker_id = 1, max_capacity = 1, node_id = 1, coordinates = 0, cargo_type = "", caravan_condition = False):
+    def __init__(self, ship_id = None, edge_position = 1, edge_id = -1, port_id = 1, in_port = True, icebreaker_id = 1, max_capacity = 1, node_id = 1, coordinates = 0, cargo_type = "", caravan_condition = False, way = ''):
         self.ship_id = ship_id
         self.edge_position = edge_position
         self.edge_id = edge_id
@@ -72,14 +69,17 @@ class ship: #ship = корабль
         if ship_id != None:
             indexes.ship[ship_id] = self
 
-        self.way = []
+        self.way = [int(seg) for seg in way.split(',') if seg != '']
         self.cargos = []
         self.fill_count = 0
     def create(self):
         #вытаскиваем поля из таблицы с помощью select и increment counter
         with sq.connect("Ships_Icebreakers.db") as con:
             cur = con.cursor()
-            cur.execute(f"insert into ship (edge_position, edge_id, port_id, in_port, icebreaker_id, max_capacity, node_id, coordinates, cargo_type, caravan_condition) values ('{self.edge_position}', '{self.edge_id}', '{self.port_id}', '{int(self.in_port)}', '{self.icebreaker_id}', '{self.max_capacity}', '{self.node_id}', '{self.coordinates}', '{self.cargo_type}', '{int(self.caravan_condition)}')")
+            way_str = ''
+            if way_str != None:
+                way_str = ','.join([str(opl) for opl in self.way])
+            cur.execute(f"insert into ship (edge_position, edge_id, port_id, in_port, icebreaker_id, max_capacity, node_id, coordinates, cargo_type, caravan_condition, way) values ('{self.edge_position}', '{self.edge_id}', '{self.port_id}', '{int(self.in_port)}', '{self.icebreaker_id}', '{self.max_capacity}', '{self.node_id}', '{self.coordinates}', '{self.cargo_type}', '{int(self.caravan_condition)}','{way_str}')")
             cur.execute("select count(*) from ship")      
             result = cur.fetchone()
             self.ship_id = result[0]
@@ -87,6 +87,9 @@ class ship: #ship = корабль
     def update(self):
         #обновление поля из таблицы
         with sq.connect("Ships_Icebreakers.db") as con:
+            way_str = ''
+            if self.way != None:
+                way_str = ','.join([str(opl) for opl in self.way])
             cur = con.cursor()
             cur.execute(f"""UPDATE ship
                         SET
@@ -99,7 +102,8 @@ class ship: #ship = корабль
                         node_id = {self.node_id},
                         coordinates = {self.coordinates},
                         cargo_type = '{self.cargo_type}',
-                        caravan_condition = {int(self.caravan_condition)}
+                        caravan_condition = {int(self.caravan_condition)},
+                        way = '{way_str}'
                         WHERE ship_id = {self.ship_id}
             """)
 
@@ -107,7 +111,7 @@ class consignment: #consignment = партия груза
     # cont - контейнер
     # oil - нефть
     # weight - весовой груз
-    def __init__(self, cargo_id = None, cargo_type = "cont", size = 1, node_destination_id = 1, ship_immediately = True, type_refer = 1, id_refer = 1, coordinates = 0, contracted = True):
+    def __init__(self, cargo_id = None, cargo_type = "cont", size = 1, node_destination_id = 1, ship_immediately = True, type_refer = 1, id_refer = 1, coordinates = 0, contracted = True, way = 'none'):
         self.cargo_id = cargo_id
         self.cargo_type = cargo_type
         self.size = size
@@ -119,13 +123,18 @@ class consignment: #consignment = партия груза
         self.contracted = bool(contracted)        
         if cargo_id != None:
             indexes.consignment[cargo_id] = self
-
-        self.way = None
+        if way == 'none':
+            self.way = None
+        else:
+            self.way = [int(seg) for seg in way.split(',') if seg != '']
     def create(self):
         #вытаскиваем поля из таблицы с помощью select и increment counter
         with sq.connect("Ships_Icebreakers.db") as con:
+            way_str = 'none'
+            if self.way != None:
+                way_str = ','.join([str(opl) for opl in self.way])
             cur = con.cursor()
-            cur.execute(f"insert into consignment (cargo_type, size, node_destination_id, ship_immediately, type_refer, id_refer, coordinates, contracted) values ('{self.cargo_type}', '{self.size}', '{self.node_destination_id}', '{int(self.ship_immediately)}', '{self.type_refer}', '{self.id_refer}', '{self.coordinates}', '{int(self.contracted)}')")
+            cur.execute(f"insert into consignment (cargo_type, size, node_destination_id, ship_immediately, type_refer, id_refer, coordinates, contracted, way) values ('{self.cargo_type}', '{self.size}', '{self.node_destination_id}', '{int(self.ship_immediately)}', '{self.type_refer}', '{self.id_refer}', '{self.coordinates}', '{int(self.contracted)}','{way_str}')")
             cur.execute("select count(*) from consignment")      
             result = cur.fetchone()
             self.cargo_id = result[0]
@@ -133,6 +142,9 @@ class consignment: #consignment = партия груза
     def update(self):
         #обновление поля из таблицы
         with sq.connect("Ships_Icebreakers.db") as con:
+            way_str = 'none'
+            if self.way != None:
+                way_str = ','.join([str(opl) for opl in self.way])
             cur = con.cursor()
             cur.execute(f"""UPDATE consignment
                         SET
@@ -143,32 +155,31 @@ class consignment: #consignment = партия груза
                         type_refer = {self.type_refer},
                         id_refer = {self.id_refer},
                         coordinates = {self.coordinates},
-                        contracted = {int(self.contracted)}
+                        contracted = {int(self.contracted)},
+                        way = '{way_str}'
                         WHERE cargo_id = {self.cargo_id}
             """)
 
 class icebreaker: #icebreaker = ледокол
-    def __init__(self, icebreaker_id = None, edge_position = 0, prepare_caravan = True, edge_id = 0, port_id = 0, node_destination_id = 1, speed = 40,shipsin_caravan = True):
+    def __init__(self, icebreaker_id = None, edge_position = 0, prepare_caravan = True, edge_id = 0, port_id = 0, node_destination_id = 1,max_caravan_ships = 5,time_wait_caravan = 3):
         self.icebreaker_id = icebreaker_id
         self.edge_position = edge_position
         self.prepare_caravan = bool(prepare_caravan)
         self.edge_id = edge_id
         self.port_id = port_id
         self.node_destination_id = node_destination_id
-        self.speed = speed
-        self.shipsin_caravan = bool(shipsin_caravan)
         if icebreaker_id != None:
             indexes.icebreaker[icebreaker_id] = self
 
         self.caravan_ships = []
-        self.max_caravan_ships = 10
-        self.time_wait_caravan = 5
+        self.max_caravan_ships = max_caravan_ships
+        self.time_wait_caravan = time_wait_caravan
         self.ticks_wait = 0
     def create(self):
         #вытаскиваем поля из таблицы с помощью select и increment counter
         with sq.connect("Ships_Icebreakers.db") as con:
             cur = con.cursor()
-            cur.execute(f"insert into icebreaker (edge_position, prepare_caravan, edge_id, port_id, node_destination_id, speed, shipsin_caravan) values ('{self.edge_position}', '{int(self.prepare_caravan)}', '{self.edge_id}', '{self.port_id}', '{self.node_destination_id}', '{self.speed}', '{int(self.shipsin_caravan)}')")
+            cur.execute(f"insert into icebreaker (edge_position, prepare_caravan, edge_id, port_id, node_destination_id, max_caravan_ships, time_wait_caravan) values ('{self.edge_position}', '{int(self.prepare_caravan)}', '{self.edge_id}', '{self.port_id}', '{self.node_destination_id}', '{self.max_caravan_ships}', '{int(self.time_wait_caravan)}')")
             cur.execute("select count(*) from icebreaker")      
             result = cur.fetchone()
             self.icebreaker_id = result[0]
@@ -183,8 +194,8 @@ class icebreaker: #icebreaker = ледокол
                         edge_id = {self.edge_id},
                         port_id = {self.port_id}, 
                         node_destination_id = {self.node_destination_id}, 
-                        speed = {self.speed}, 
-                        shipsin_caravan = {int(self.shipsin_caravan)}
+                        max_caravan_ships = {self.max_caravan_ships}, 
+                        time_wait_caravan = {int(self.time_wait_caravan)}
                         WHERE icebreaker_id = {self.icebreaker_id}
             """)
 

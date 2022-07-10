@@ -17,6 +17,7 @@ def cargos_move():
                 if cargo.contracted:
                     print(f'Груз {cargo_id} доставлен!')
                     cargo.contracted = False
+                    cargo.update()
                     #TODO do remove
                 continue
 
@@ -61,9 +62,9 @@ def cargos_move():
 
                     ship.fill_count += cargo.size
                     ship.cargos.append(cargo)
+                    ship.update()
                     cargo.type_refer = 3
                     cargo.id_refer = ship.ship_id
-                    #cargo.update()
                     break
                 else:
                     cargo.way.insert(0,next_node_id)
@@ -78,7 +79,7 @@ def cargos_move():
                     cargo.coordinates = 1
                 else:
                     cargo.coordinates = -1
-            #cargo.update()
+            cargo.update()
         elif cargo.type_refer == 2: # груз на ребре
             this_edge: Classes.edges = Classes.indexes.edges[cargo.id_refer]
             vec = cargo.coordinates // abs(cargo.coordinates)
@@ -92,7 +93,7 @@ def cargos_move():
                 else:
                     cargo.id_refer = this_edge.id_begin_node
                 print(f'Груз {cargo_id} прибыл на узел {cargo.id_refer}')
-            #cargo.update()
+            cargo.update()
         #если груз на корабле, то на данном шаге ничего не делаем
 
 def unloading_ship(ship: Classes.ship, this_node: Classes.node):
@@ -111,10 +112,12 @@ def unloading_ship(ship: Classes.ship, this_node: Classes.node):
             ship.cargos.remove(cargo)
             ship.fill_count -= cargo.size
             cargo.type_refer = 1
-            cargo.id_refer = this_node.node_id
+            cargo.id_refer = this_node.node_id            
             print(f"Груз {cargo.cargo_id} доставлен на узел {this_node.node_id}")
         else:
             del cargo.way[0]
+        cargo.update()
+    ship.update()
 
 def ships_move():
     for ship_id in Classes.indexes.ship:
@@ -149,11 +152,13 @@ def ships_move():
                     else:
                         ship.coordinates = -1
                     print(f"Корабль {ship_id} отчалил к узлу {next_node_id}")
+                ship.update()
         else:
             this_edge: Classes.edges = Classes.indexes.edges[ship.edge_id]
             vec = ship.coordinates // abs(ship.coordinates)
             ship.coordinates += 100 / this_edge.length * vec
             print(f'Корабль {ship_id} на ребре {this_edge.edge_id} {ship.coordinates}')
+            ship.update()
             if abs(ship.coordinates) >= 100:                
                 if ship.coordinates > 0:
                     this_node_id = this_edge.id_end_node
@@ -181,10 +186,13 @@ def ships_move():
                     for ship in iceb.caravan_ships:
                         this_node.allow_ships[ship.cargo_type].remove(ship)
                         ship.in_port = False
+                        ship.update()
+                    iceb.update()
         else:
             this_edge: Classes.edges = Classes.indexes.edges[iceb.edge_id]
             iceb.edge_position += 100 / this_edge.length
             print(f'Ледокол {iceb.icebreaker_id} на ребре {this_edge.edge_id} {iceb.edge_position}')
+            iceb.update()
             if abs(iceb.edge_position) >= 100: 
                 # ледокол прибыл в порт
                 print(f'Ледокол {iceb.icebreaker_id} прибыл в порт {iceb.node_destination_id}')
@@ -204,6 +212,7 @@ def ships_move():
                     ship.caravan_condition = False
                     unloading_ship(ship,this_node)
                 iceb.caravan_ships = []
+                iceb.update()
 
 time_tick = 1
 

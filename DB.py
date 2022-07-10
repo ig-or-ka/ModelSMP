@@ -13,7 +13,6 @@ with sq.connect("Ships_Icebreakers.db") as con:
         ice_condition INTEGER DEFAULT 0,
         length INTEGER,
         incident_nodes TEXT,
-        max_throughput INTEGER,
         tariff TEXT
     )""")
 
@@ -37,7 +36,8 @@ with sq.connect("Ships_Icebreakers.db") as con:
         node_id INTEGER,
         coordinates INTEGER,
         cargo_type TEXT,
-        caravan_condition BOOLEAN
+        caravan_condition BOOLEAN,
+        way TEXT
     )""")
 
     # id груза (INT PRIMARY KEY autoincrement)
@@ -58,7 +58,8 @@ with sq.connect("Ships_Icebreakers.db") as con:
         type_refer INTEGER,
         id_refer INTEGER,
         coordinates INTEGER,
-        contracted BOOLEAN
+        contracted BOOLEAN,
+        way TEXT
     )""")
 
     # id ледокола (INT PRIMARY KEY autoincrement)
@@ -75,8 +76,8 @@ with sq.connect("Ships_Icebreakers.db") as con:
         edge_id INTEGER,
         port_id INTEGER,
         node_destination_id INTEGER,
-        speed INTEGER,
-        shipsin_caravan BOOLEAN
+        max_caravan_ships INTEGER,
+        time_wait_caravan INTEGER
     )""")
 
        
