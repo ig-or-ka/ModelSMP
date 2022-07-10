@@ -5,11 +5,24 @@ from time import sleep
 Classes.full_info()
 Classes.preparing()
 
+def is_wait_icebreaker(start_node:Classes.node, edge:Classes.edges):
+    if edge.id_begin_node == start_node.node_id:
+        end_node_id = edge.id_end_node
+    else:
+        end_node_id = edge.id_begin_node
+    for iceb in start_node.allow_ships['iceb']:
+        if iceb.node_destination_id == end_node_id:
+            return True
+    for iceb in edge.icebreakers:
+        if iceb.node_destination_id == start_node.node_id and iceb.edge_position >= 80:
+            return True
+    return False
+
 def cargos_move():
     for cargo_id in Classes.indexes.consignment:
         cargo: Classes.consignment = Classes.indexes.consignment[cargo_id]
         if cargo.way == None:
-            cargo.way = alorithm(cargo)
+            cargo.way = alorithm(cargo,False)
             print(cargo.way)
         if cargo.type_refer == 1: # груз на узле
             
@@ -28,6 +41,17 @@ def cargos_move():
             next_edge: Classes.edges = this_node.edges_list[next_node_id]
             
             if next_edge.edge_type == "sea":
+                if next_edge.ice_condition > 0\
+                    and cargo.ship_immediately\
+                    and not is_wait_icebreaker(this_node,next_edge):
+
+                    way = alorithm(cargo,True)
+                    if len(way) > 0:
+                        cargo.way = way
+                        print(f"Груз {cargo.cargo_id} не будет ждать ледокол",cargo.way)
+                        cargo.update()
+                        continue
+
                 ships = this_node.allow_ships[cargo.cargo_type]
                 for ship in ships:
                     if ship.fill_count + cargo.size > ship.max_capacity:
@@ -108,6 +132,18 @@ def unloading_ship(ship: Classes.ship, this_node: Classes.node):
         if not out_cargo:
             next_edge: Classes.edges = this_node.edges_list[cargo.way[0]]
             out_cargo = next_edge.edge_type != "sea"
+            if not out_cargo\
+                    and cargo.ship_immediately\
+                    and next_edge.ice_condition > 0\
+                    and not is_wait_icebreaker(this_node,next_edge):
+                temp_id_refer = cargo.id_refer
+                cargo.id_refer = this_node.node_id
+                way = alorithm(cargo,True)
+                cargo.id_refer = temp_id_refer
+                if len(way) > 0:
+                    cargo.way = way
+                    print(f"Груз {cargo.cargo_id} не будет ждать ледокол",cargo.way)
+                    out_cargo = True
         if out_cargo:
             ship.cargos.remove(cargo)
             ship.fill_count -= cargo.size
