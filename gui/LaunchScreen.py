@@ -134,7 +134,7 @@ class Application:
                                        x + self.node_radius, y + self.node_radius,
                                        outline=color, fill=color)
 
-    def draw_edge(self, node_a, node_b, width, node_type="sea"):
+    def draw_edge(self, node_a, node_b, width, edge_type="sea"):
         color = {
             "sea": self.edge_sea_color,
             "train": self.edge_train_color,
@@ -142,7 +142,7 @@ class Application:
             "loading": self.edge_loading_color
         }
 
-        return self.canvas.create_line(node_a[0], node_a[1], node_b[0], node_b[1], width=width, fill=color[node_type])
+        return self.canvas.create_line(node_a[0], node_a[1], node_b[0], node_b[1], width=width, fill=color[edge_type])
 
     def draw_nodes(self, nodes):
         for node in nodes:
@@ -151,8 +151,18 @@ class Application:
 
     def draw_edges(self, edges, nodes, width):
         for i in range(len(edges)):
-            self.draw_edge(nodes[edges[i][0]], nodes[edges[i][1]], width[i])
+            self.draw_edge(nodes[edges[i][0]], nodes[edges[i][1]], width[i], edge_type=self.get_edge_type(i))
         self.update()
+
+    def get_edge_type(self, edge_id):
+        if edge_id <= 44:
+            return "sea"
+        elif edge_id <= 49:
+            return "train"
+        elif edge_id <= 50:
+            return "pipe"
+        else:
+            return "loading"
 
     def update(self):
         self.window.update_idletasks()
