@@ -144,14 +144,22 @@ class Application:
 
         return self.canvas.create_line(node_a[0], node_a[1], node_b[0], node_b[1], width=width, fill=color[edge_type])
 
+    def redraw_edge(self, edge_id, width, edge_type="sea"): #width от 1 до 10 можешь ебашить
+        self.canvas.delete(self.drawn_edges[edge_id])
+        self.drawn_edges = self.draw_edge(nodes_default[edges_default[edge_id][0]], nodes_default[edges_default[edge_id][1]], width, edge_type)
+
+
     def draw_nodes(self, nodes):
         for node in nodes:
             self.draw_node(node[0], node[1])
         self.update()
 
+
+    drawn_edges = []
+
     def draw_edges(self, edges, nodes, width):
         for i in range(len(edges)):
-            self.draw_edge(nodes[edges[i][0]], nodes[edges[i][1]], width[i], edge_type=self.get_edge_type(i))
+            self.drawn_edges.append(self.draw_edge(nodes[edges[i][0]], nodes[edges[i][1]], width[i], edge_type=self.get_edge_type(i)))
         self.update()
 
     def get_edge_type(self, edge_id):
