@@ -37,6 +37,8 @@ def alorithm(cargo: Classes.consignment, without_smp):
 
 def req_find1(start_node, end_node, cargo, without_smp):
     graph = generate_graph(cargo.cargo_type == "oil", without_smp)
+    for i in graph:
+        print(i,graph[i].neighbours)
 
     open_list = [graph[start_node]]
     closed_list = []
@@ -56,13 +58,17 @@ def req_find1(start_node, end_node, cargo, without_smp):
         if current_node.id == end_node:
             path = []
             current = current_node
+            print('start')
             while current is not None:
+                #print(current.id)
                 path.append(current.id)
                 current = current.parent
+            print('end')
             return path[::-1]  # Return reversed path
 
 
         children = [graph[i] for i in current_node.neighbours]
+        print([ch.id for ch in children])
 
         for child in children:
 
@@ -75,6 +81,7 @@ def req_find1(start_node, end_node, cargo, without_smp):
             child.g = current_node.g + get_dist(child.id, current_node.id)
             child.h = get_h(current_node.id, child.id, cargo)
             child.f = child.g + child.h
+            child.parent = current_node
 
             # Child is already in the open list
             for open_node in open_list:
@@ -135,9 +142,16 @@ class Node:
         self.g = 0
         self.h = 0
         self.f = 0
+# для теста
+if __name__ == '__main__':
+    Classes.full_info()
+    Classes.preparing()
+    """
+    gr = generate_graph(False,False)
+    for i in gr:
+        print(i,gr[i].neighbours)
+    """
 
-"""
-gr = generate_graph(False,False)
-for i in range(len(gr)):
-    print(gr[i].neighbours)
-"""
+    cargo = Classes.indexes.consignment[1]
+    res = req_find1(cargo.id_refer, cargo.node_destination_id, cargo, False)
+    print(res)
