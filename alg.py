@@ -61,7 +61,7 @@ def req_find1(start_node, end_node, cargo, without_smp):
             return path[::-1]  # Return reversed path
 
 
-        children = [Node(i) for i in current_node.neighbours]
+        children = [graph[i] for i in current_node.neighbours]
 
         for child in children:
 
