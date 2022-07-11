@@ -45,6 +45,9 @@ def req_find(start_node, end_node, cargo, without_smp):
         current_node = open_list[0]
         current_index = 0
 
+        # print("open list ", [l.id for l in open_list])
+        # print("closed list ", [l.id for l in closed_list])
+
         for i, item in enumerate(open_list):
             if item.f < current_node.f:
                 current_node = item
@@ -83,13 +86,18 @@ def req_find(start_node, end_node, cargo, without_smp):
             child.h = get_h(current_node.id, child.id, cargo)
             child.f = child.g + child.h
             child.parent = current_node
+            # print("g, h, f = ", child.g, child.h, child.f)
 
             #print("child id ", child.id, "parent id ", current_node.id)
 
             # Child is already in the open list
+            kostyl_2 = False
             for open_node in open_list:
                 if child == open_node and child.g > open_node.g:
-                    continue
+                    costyl_2 = True
+                    break
+            if kostyl_2:
+                continue
 
             # Add the child to the open list
             open_list.append(child)
