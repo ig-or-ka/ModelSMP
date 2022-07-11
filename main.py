@@ -13,12 +13,24 @@ def add_ship_cargo_edge(ship:Classes.ship, edge:Classes.edges):
     for cargo in ship.cargos:
         edge.weight_cargo += cargo.size
     print(f"Загрузка ребра {edge.edge_id}: {edge.count_cargo} {edge.weight_cargo}")
+    move_edge_weight(edge)
 
 def remove_ship_cargo_edge(ship:Classes.ship, edge:Classes.edges):
     edge.count_cargo -= len(ship.cargos)
     for cargo in ship.cargos:
         edge.weight_cargo -= cargo.size
     print(f"Загрузка ребра {edge.edge_id}: {edge.count_cargo} {edge.weight_cargo}")
+    move_edge_weight(edge)
+
+def move_edge_weight(edge:Classes.edges):
+    weight = 1
+    if edge.count_cargo > 9:
+        weight = 10
+    elif edge.count_cargo >= 1:
+        weight = edge.count_cargo + 1
+    if weight != edge.edge_width:
+        edge.edge_width = weight
+    GUI.app.redraw_edge(edge)
 
 def is_wait_icebreaker(start_node:Classes.node, edge:Classes.edges):
     if edge.id_begin_node == start_node.node_id:
@@ -115,6 +127,7 @@ def cargos_move():
                 # edit cargo on edge count
                 next_edge.count_cargo += 1
                 next_edge.weight_cargo += cargo.size
+                move_edge_weight(next_edge)
                 print(f"Загрузка ребра {next_edge.edge_id}: {next_edge.count_cargo} {next_edge.weight_cargo}")
 
                 cargo.type_refer = 2
@@ -134,6 +147,7 @@ def cargos_move():
                 # edit cargo on edge count
                 this_edge.count_cargo -= 1
                 this_edge.weight_cargo -= cargo.size
+                move_edge_weight(this_edge)
                 print(f"Загрузка ребра {this_edge.edge_id}: {this_edge.count_cargo} {this_edge.weight_cargo}")
                 cargo.type_refer = 1
                 if cargo.coordinates > 0:

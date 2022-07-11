@@ -135,9 +135,11 @@ class Application:
 
         return self.canvas.create_line(node_a.coordinate_X, node_a.coordinate_Y, node_b.coordinate_X, node_b.coordinate_Y, width=width, fill=color[edge_type])
 
-    def redraw_edge(self, edge_id, width, edge_type="sea"): #width от 1 до 10 можешь отправлять
-        self.canvas.delete(self.drawn_edges[edge_id])
-        self.drawn_edges[edge_id] = self.draw_edge(nodes_default[edges_default[edge_id][0]], nodes_default[edges_default[edge_id][1]], width, edge_type)
+    def redraw_edge(self, edge): #width от 1 до 10 можешь отправлять
+        self.canvas.delete(self.drawn_edges[edge.edge_id])
+        node_a: Classes.node = Classes.indexes.node[edge.id_begin_node]
+        node_b: Classes.node = Classes.indexes.node[edge.id_end_node]
+        self.drawn_edges[edge.edge_id] = self.draw_edge(node_a, node_b, edge.edge_width, edge.edge_type)
 
 
     def draw_nodes(self):
@@ -147,14 +149,14 @@ class Application:
         self.update()
 
 
-    drawn_edges = []
+    drawn_edges = dict()
 
     def draw_edges(self):
         for edge_id in Classes.indexes.edges:
             edge: Classes.edges = Classes.indexes.edges[edge_id]
             node_a: Classes.node = Classes.indexes.node[edge.id_begin_node]
             node_b: Classes.node = Classes.indexes.node[edge.id_end_node]
-            self.drawn_edges.append(self.draw_edge(node_a, node_b, edge.edge_width, edge.edge_type))
+            self.drawn_edges[edge_id] = self.draw_edge(node_a, node_b, edge.edge_width, edge.edge_type)
         self.update()
 
     def update(self):

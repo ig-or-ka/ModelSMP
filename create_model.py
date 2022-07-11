@@ -1,5 +1,5 @@
 import Classes
-from gui.values import *
+from values import *
 
 
 #---------------------от Васи: сделал модель, как я понял---------------------------------------------
@@ -14,10 +14,11 @@ print(len(nodes_default))
 for i in range(len(nodes_default)):
     coordinate = f"{nodes_default[i][0]}_{nodes_default[i][1]}"
     graph_nodes.append(Classes.node(node_id=i, coordinates=coordinate))
+    graph_nodes[-1].create()
 
 # добавляю дефолтные ребра морских путей из своего файла
 for i in range(len(edges_default)):
-    incident_nodes = f"{edges_default[i][0]}_{edges_default[i][1]}"
+    incident_nodes = f"{edges_default[i][0]+1}_{edges_default[i][1]+1}"
     # для длины ребра использую тупа расстояние между двумя точками по пифагору
     # шутка: как вы все знаете, 1 + 1 = 2. разобравшись с этим выражением мы приходим к следующим вычислениям:
     length = ((nodes_default[edges_default[i][1]][0] - nodes_default[edges_default[i][0]][0])**2 +
@@ -25,6 +26,7 @@ for i in range(len(edges_default)):
     graph_edges.append(Classes.edges(edge_id=i,
                                      incident_nodes=incident_nodes,
                                      length=length))
+    graph_edges[-1].create()
 
 
 
