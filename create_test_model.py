@@ -28,7 +28,7 @@ edge2.id_begin_node = node2.node_id
 edge2.id_end_node = node3.node_id
 edge2.create()
 
-edge3 = Classes.edges(edge_type="sea",length=5)
+edge3 = Classes.edges(edge_type="sea",length=5, tariff="15_15_15")
 edge3.id_begin_node = node2.node_id
 edge3.id_end_node = node4.node_id
 edge3.create()

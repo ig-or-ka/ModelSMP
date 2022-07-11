@@ -1,7 +1,7 @@
 import Classes
-#from gui.values import edges_default, nodes_default
 
 # это простой алгоритм - заглушка
+"""
 def req_find(start_node, end_node, used_nodes: list,without_smp):
     used_nodes.append(start_node)
     node: Classes.node = Classes.indexes.node[start_node]
@@ -16,30 +16,27 @@ def req_find(start_node, end_node, used_nodes: list,without_smp):
                     res.insert(0,start_node)
                     return res
     return []
+"""
 
 
 
 
 def alorithm(cargo: Classes.consignment, without_smp):
     #res = req_find(cargo.id_refer,cargo.node_destination_id,[],without_smp)
-    res = req_find1(cargo.id_refer, cargo.node_destination_id, cargo, without_smp)
-    print(res)
-    if len(res) > 0:
+    res = req_find(cargo.id_refer, cargo.node_destination_id, cargo, without_smp)
+    if res == None:
+        return []
+    else:
         del res[0]
     return res  #  возвращай список id нод
 
-
-
-
-
-
-# ну штош, щас будем реально кодить big cringe
-
-def req_find1(start_node, end_node, cargo, without_smp):
-    print("from ", start_node, "to ", end_node)
+def req_find(start_node, end_node, cargo, without_smp):
     graph = generate_graph(cargo.cargo_type == "oil", without_smp)
+    """
+    print("from ", start_node, "to ", end_node)    
     for i in graph:
         print(i,graph[i].neighbours)
+    """
 
     open_list = [graph[start_node]]
     closed_list = []
@@ -56,21 +53,17 @@ def req_find1(start_node, end_node, cargo, without_smp):
         open_list.pop(current_index)
         closed_list.append(current_node)
 
-        print("-------current node id", current_node.id)
+        #print("-------current node id", current_node.id)
         if current_node.id == end_node:
             path = []
             current = current_node
-            print('start')
             while current is not None:
-                #print(current.id)
                 path.append(current.id)
                 current = current.parent
-            print('end')
             return path[::-1]  # Return reversed path
 
 
         children = [graph[i] for i in current_node.neighbours]
-        print([ch.id for ch in children])
 
         for child in children:
 
@@ -91,7 +84,7 @@ def req_find1(start_node, end_node, cargo, without_smp):
             child.f = child.g + child.h
             child.parent = current_node
 
-            print("child id ", child.id, "parent id ", current_node.id)
+            #print("child id ", child.id, "parent id ", current_node.id)
 
             # Child is already in the open list
             for open_node in open_list:
@@ -152,6 +145,7 @@ class Node:
         self.g = 0
         self.h = 0
         self.f = 0
+        
 # для теста
 if __name__ == '__main__':
     Classes.full_info()
@@ -163,5 +157,5 @@ if __name__ == '__main__':
     """
 
     cargo = Classes.indexes.consignment[1]
-    res = req_find1(cargo.id_refer, cargo.node_destination_id, cargo, False)
+    res = req_find(cargo.id_refer, cargo.node_destination_id, cargo, False)
     print("res", res)
