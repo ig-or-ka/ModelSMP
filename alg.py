@@ -94,7 +94,7 @@ def req_find(start_node, end_node, cargo, without_smp):
             kostyl_2 = False
             for open_node in open_list:
                 if child == open_node and child.g > open_node.g:
-                    costyl_2 = True
+                    kostyl_2 = True
                     break
             if kostyl_2:
                 continue
