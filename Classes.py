@@ -13,7 +13,7 @@ class edges: #edges = ребра
     # incident_nodes: "*id_begin_node*_*id_end_node*"
     # tariff: "*tariff_cont*_*tariff_oil*_*tariff_weight*"
     # edge_types: sea, train, pipe, loading
-    def __init__(self, edge_type = "sea", edge_id = None, ice_condition = 0, length = 1, incident_nodes = "0_0", tariff = "0_0_0"):
+    def __init__(self, edge_type = "sea", edge_id = None, ice_condition = 0, length = 1, incident_nodes = "0_0", tariff = "1_1_1"):
         self.edge_type = edge_type
         self.edge_id = edge_id
         self.ice_condition = ice_condition

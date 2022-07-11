@@ -21,8 +21,9 @@ def req_find(start_node, end_node, used_nodes: list,without_smp):
 
 
 def alorithm(cargo: Classes.consignment, without_smp):
-    res = req_find(cargo.id_refer,cargo.node_destination_id,[],without_smp)
-    #res = req_find(cargo.id_refer, cargo.node_destination_id, cargo, without_smp)
+    #res = req_find(cargo.id_refer,cargo.node_destination_id,[],without_smp)
+    res = req_find1(cargo.id_refer, cargo.node_destination_id, cargo, without_smp)
+    print(res)
     if len(res) > 0:
         del res[0]
     return res  #  возвращай список id нод
@@ -52,7 +53,7 @@ def req_find1(start_node, end_node, cargo, without_smp):
         open_list.pop(current_index)
         closed_list.append(current_node)
 
-        if current_node == end_node:
+        if current_node.id == end_node:
             path = []
             current = current_node
             while current is not None:
@@ -71,7 +72,7 @@ def req_find1(start_node, end_node, cargo, without_smp):
                     continue
 
             # Create the f, g, and h values
-            child.g = current_node.g + get_dist(child.id, current_node)
+            child.g = current_node.g + get_dist(child.id, current_node.id)
             child.h = get_h(current_node.id, child.id, cargo)
             child.f = child.g + child.h
 
@@ -98,10 +99,9 @@ def generate_graph(is_oil, without_smp):
 
 
 def get_dist(a_id, b_id):
-    node_a = nodes_default[a_id]
-    node_b = nodes_default[b_id]
-
-    return ((node_b[0] - node_a[0]) ** 2 + (node_b[1] - node_a[1]) ** 2) ** 0.5
+    node_a: Classes.node = Classes.indexes.node[a_id]
+    edge: Classes.edges = node_a.edges_list[b_id]
+    return edge.length
 
 def get_h(a_id, b_id, cargo):
     node_a = Classes.indexes.node[a_id]

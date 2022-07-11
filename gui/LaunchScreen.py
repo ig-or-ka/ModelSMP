@@ -146,7 +146,7 @@ class Application:
 
     def redraw_edge(self, edge_id, width, edge_type="sea"): #width от 1 до 10 можешь отправлять
         self.canvas.delete(self.drawn_edges[edge_id])
-        self.drawn_edges = self.draw_edge(nodes_default[edges_default[edge_id][0]], nodes_default[edges_default[edge_id][1]], width, edge_type)
+        self.drawn_edges[edge_id] = self.draw_edge(nodes_default[edges_default[edge_id][0]], nodes_default[edges_default[edge_id][1]], width, edge_type)
 
 
     def draw_nodes(self, nodes):
