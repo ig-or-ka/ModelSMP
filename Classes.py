@@ -35,6 +35,7 @@ class edges: #edges = ребра
 
         self.count_cargo = 0
         self.weight_cargo = 0
+        self.edge_width = 1
     def create(self):
         #вытаскиваем поля из таблицы с помощью select и increment counter
         with sq.connect("Ships_Icebreakers.db") as con:

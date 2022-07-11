@@ -5,8 +5,8 @@ from PIL import Image, ImageTk
 # и когда установится, то обратно замените pillow на PIL
 from PIL.Image import Resampling
 from tkinter import ttk
-from gui.values import *
-from Classes import edges
+from threading import Thread
+import Classes
 
 
 class Application:
@@ -64,7 +64,7 @@ class Application:
 
         self.ships = []
         self.icebreakers = []
-        self.goods = []
+        self.good = None
 
         self.list_goods = ttk.Combobox(self.window, values=[1, 2, 3, 4, 5])
         self.list_goods.place(x=150,
@@ -73,11 +73,8 @@ class Application:
 
         # Отрисовываем граф
         # рисуем сначала ребра, чтобы потом узлы отрисовывались поверх
-        self.draw_edges(edges_default, nodes_default, edges_width_default)
-        self.draw_nodes(nodes_default)
-
-    def add_goods(self, goods):
-        self.goods.append(goods)
+        self.draw_edges()
+        self.draw_nodes()
 
     def add_ship(self, ship):
         self.ships.append(ship)
@@ -91,37 +88,31 @@ class Application:
             self.counter -= 1
             self.count_label.config(text=f"{self.counter}")
 
-    goods = []
+    def draw_goods(self, edge, percent):  # тут возможно еще надо передавать сам груз, какую то инфу о нем, чтоб я добавлял его в список. пока я просто его айди передаю
+        node_a:Classes.node = Classes.indexes.node[edge.id_begin_node]
+        node_b:Classes.node = Classes.indexes.node[edge.id_end_node]
 
-    def draw_goods(self, edge, percent, id):  # тут возможно еще надо передавать сам груз, какую то инфу о нем, чтоб я добавлял его в список. пока я просто его айди передаю
-        node_a = nodes_default[edge.id_begin_node]
-        node_b = nodes_default[edge.id_end_node]
-
-        x = node_a[0] + (node_b[0] - node_a[0]) * percent
-        y = node_a[1] + (node_b[1] - node_a[1]) * percent
+        percent /= 100
+        x = node_a.coordinate_X + (node_b.coordinate_X - node_a.coordinate_X) * percent
+        y = node_a.coordinate_Y + (node_b.coordinate_Y - node_a.coordinate_Y) * percent
 
         oval = self.canvas.create_oval(x - self.goods_radius, y - self.goods_radius,
                                        x + self.goods_radius, y + self.goods_radius,
                                        outline=self.goods_color, fill=self.goods_color)
+        if self.good != None:
+            self.canvas.delete(self.good)
+        self.good = oval
 
-        if id < len(self.goods):
-            self.canvas.delete(self.goods[id])
-            self.goods[id] = oval
-        else:
-            self.goods.append(oval)
-
-
-
-
+    def remove_goods(self):
+        if self.good != None:
+            self.canvas.delete(self.good)
+            self.good = None
 
     def draw_ship(self):
         pass
 
     def draw_icebreaker(self):
         pass
-
-    def get_goods(self):
-        return self.goods
 
     def get_ships(self):
         return self.ships
@@ -134,7 +125,7 @@ class Application:
                                        x + self.node_radius, y + self.node_radius,
                                        outline=color, fill=color)
 
-    def draw_edge(self, node_a, node_b, width, edge_type="sea"):
+    def draw_edge(self, node_a:Classes.node, node_b:Classes.node, width, edge_type="sea"):
         color = {
             "sea": self.edge_sea_color,
             "train": self.edge_train_color,
@@ -142,35 +133,29 @@ class Application:
             "loading": self.edge_loading_color
         }
 
-        return self.canvas.create_line(node_a[0], node_a[1], node_b[0], node_b[1], width=width, fill=color[edge_type])
+        return self.canvas.create_line(node_a.coordinate_X, node_a.coordinate_Y, node_b.coordinate_X, node_b.coordinate_Y, width=width, fill=color[edge_type])
 
     def redraw_edge(self, edge_id, width, edge_type="sea"): #width от 1 до 10 можешь отправлять
         self.canvas.delete(self.drawn_edges[edge_id])
         self.drawn_edges[edge_id] = self.draw_edge(nodes_default[edges_default[edge_id][0]], nodes_default[edges_default[edge_id][1]], width, edge_type)
 
 
-    def draw_nodes(self, nodes):
-        for node in nodes:
-            self.draw_node(node[0], node[1])
+    def draw_nodes(self):
+        for node_id in Classes.indexes.node:
+            node: Classes.node = Classes.indexes.node[node_id]
+            self.draw_node(node.coordinate_X, node.coordinate_Y)
         self.update()
 
 
     drawn_edges = []
 
-    def draw_edges(self, edges, nodes, width):
-        for i in range(len(edges)):
-            self.drawn_edges.append(self.draw_edge(nodes[edges[i][0]], nodes[edges[i][1]], width[i], edge_type=self.get_edge_type(i)))
+    def draw_edges(self):
+        for edge_id in Classes.indexes.edges:
+            edge: Classes.edges = Classes.indexes.edges[edge_id]
+            node_a: Classes.node = Classes.indexes.node[edge.id_begin_node]
+            node_b: Classes.node = Classes.indexes.node[edge.id_end_node]
+            self.drawn_edges.append(self.draw_edge(node_a, node_b, edge.edge_width, edge.edge_type))
         self.update()
-
-    def get_edge_type(self, edge_id):
-        if edge_id <= 44:
-            return "sea"
-        elif edge_id <= 49:
-            return "train"
-        elif edge_id <= 50:
-            return "pipe"
-        else:
-            return "loading"
 
     def update(self):
         self.window.update_idletasks()
@@ -191,13 +176,29 @@ def click(e):
     y = e.y
     print("Pointer is currently at %d, %d" % (x, y))
 
+class GUI:
+    selected_cargo: Classes.consignment = None
+    work = False
+    app: Application = None
+    @classmethod
+    def gui_th(cls):
+        cls.app = Application()
+        cls.app.end_drawing()
+        cls.work = False
+    @classmethod
+    def start(cls):
+        cls.work = True
+        Thread(target=cls.gui_th).start()
 
 # запускать тут (для теста)
 if __name__ == '__main__':
-    app = Application()
-
+    Classes.full_info()
+    Classes.preparing()
+    app = Application()    
+    """
     # тут пример просто, груз пробегает от 13 до 14 узла, но без пауз, так что почти незаметно
     for i in range(0, 100):
         app.draw_goods(edges(incident_nodes="13_14"), i / 100, 0)
+    """
 
     app.end_drawing()

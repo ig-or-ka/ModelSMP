@@ -1,9 +1,12 @@
 import Classes
 from alg import alorithm
 from time import sleep
+from LaunchScreen import GUI
 
 Classes.full_info()
 Classes.preparing()
+GUI.start()
+GUI.selected_cargo = Classes.indexes.consignment[3]
 
 def add_ship_cargo_edge(ship:Classes.ship, edge:Classes.edges):
     edge.count_cargo += len(ship.cargos)
@@ -281,7 +284,35 @@ def ships_move():
 
 time_tick = 1
 
-while True:
+while GUI.work:
     cargos_move()
     ships_move()
+    if GUI.selected_cargo != None and GUI.app != None:
+        if GUI.selected_cargo.contracted:
+            if GUI.selected_cargo.type_refer == 2:
+                if GUI.selected_cargo.coordinates >= 0:
+                    coord = GUI.selected_cargo.coordinates
+                else:
+                    coord = 100 + GUI.selected_cargo.coordinates
+                edge = Classes.indexes.edges[GUI.selected_cargo.id_refer]
+                GUI.app.draw_goods(edge,coord)
+            elif GUI.selected_cargo.type_refer == 3:
+                ship: Classes.ship = Classes.indexes.ship[GUI.selected_cargo.id_refer]
+                if not ship.in_port:
+                    if ship.caravan_condition:
+                        iceb: Classes.icebreaker = Classes.indexes.icebreaker[ship.icebreaker_id]
+                        edge: Classes.edges = Classes.indexes.edges[iceb.edge_id]
+                        if edge.id_end_node == iceb.node_destination_id:
+                            coord = iceb.edge_position
+                        else:
+                            coord = 100 - iceb.edge_position
+                    else:
+                        if ship.coordinates >= 0:
+                            coord = ship.coordinates
+                        else:
+                            coord = 100 + ship.coordinates
+                        edge = Classes.indexes.edges[ship.edge_id]
+                    GUI.app.draw_goods(edge,coord)
+        else:
+            GUI.app.remove_goods()
     sleep(time_tick)

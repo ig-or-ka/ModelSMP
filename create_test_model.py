@@ -1,13 +1,13 @@
 import Classes
 
 
-node1 = Classes.node()
+node1 = Classes.node(coordinates="339_302")
 node1.create()
-node2 = Classes.node()
+node2 = Classes.node(coordinates="389_273")
 node2.create()
-node3 = Classes.node()
+node3 = Classes.node(coordinates="453_227")
 node3.create()
-node4 = Classes.node()
+node4 = Classes.node(coordinates="458_284")
 node4.create()
 """
 node5 = Classes.node()
