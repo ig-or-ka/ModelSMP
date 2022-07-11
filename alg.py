@@ -36,6 +36,7 @@ def alorithm(cargo: Classes.consignment, without_smp):
 # ну штош, щас будем реально кодить big cringe
 
 def req_find1(start_node, end_node, cargo, without_smp):
+    print("from ", start_node, "to ", end_node)
     graph = generate_graph(cargo.cargo_type == "oil", without_smp)
     for i in graph:
         print(i,graph[i].neighbours)
@@ -55,6 +56,7 @@ def req_find1(start_node, end_node, cargo, without_smp):
         open_list.pop(current_index)
         closed_list.append(current_node)
 
+        print("-------current node id", current_node.id)
         if current_node.id == end_node:
             path = []
             current = current_node
@@ -72,16 +74,24 @@ def req_find1(start_node, end_node, cargo, without_smp):
 
         for child in children:
 
+            child_is_dead = False
+
             # Child is on the closed list
             for closed_child in closed_list:
                 if child == closed_child:
-                    continue
+                    child_is_dead = True
+                    break
+
+            if child_is_dead:
+                continue
 
             # Create the f, g, and h values
             child.g = current_node.g + get_dist(child.id, current_node.id)
             child.h = get_h(current_node.id, child.id, cargo)
             child.f = child.g + child.h
             child.parent = current_node
+
+            print("child id ", child.id, "parent id ", current_node.id)
 
             # Child is already in the open list
             for open_node in open_list:
@@ -154,4 +164,4 @@ if __name__ == '__main__':
 
     cargo = Classes.indexes.consignment[1]
     res = req_find1(cargo.id_refer, cargo.node_destination_id, cargo, False)
-    print(res)
+    print("res", res)
