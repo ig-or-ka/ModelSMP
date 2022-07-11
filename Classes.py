@@ -32,6 +32,9 @@ class edges: #edges = ребра
             indexes.edges[edge_id] = self
 
         self.icebreakers = []
+
+        self.count_cargo = 0
+        self.weight_cargo = 0
     def create(self):
         #вытаскиваем поля из таблицы с помощью select и increment counter
         with sq.connect("Ships_Icebreakers.db") as con:
@@ -284,11 +287,25 @@ def preparing():
             
 
     for cargo_id in indexes.consignment:
+        edge_id = -1
         cargo: consignment = indexes.consignment[cargo_id]
         if cargo.type_refer == 3:
             ship_o: ship = indexes.ship[cargo.id_refer]
             ship_o.cargos.append(cargo)
             ship_o.fill_count += cargo.size
+
+            if ship_o.caravan_condition:
+                iceb: icebreaker = indexes.icebreaker[ship_o.icebreaker_id]
+                if not iceb.prepare_caravan:
+                    edge_id = iceb.edge_id
+            elif not ship_o.in_port:
+                edge_id = ship_o.edge_id
+        elif cargo.type_refer == 2:
+            edge_id = cargo.id_refer
+        if edge_id != -1:
+            this_edge: edges = indexes.edges[edge_id]
+            this_edge.count_cargo += 1
+            this_edge.weight_cargo += cargo.size
     
     for iceb_id in indexes.icebreaker:
         iceb: icebreaker = indexes.icebreaker[iceb_id]

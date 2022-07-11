@@ -1,26 +1,28 @@
 import Classes
-from gui.values import edges_default, nodes_default
-from collections import deque
+#from gui.values import edges_default, nodes_default
 
 # это простой алгоритм - заглушка
-# def req_find(start_node, end_node, used_nodes: list):
-#     used_nodes.append(start_node)
-#     node: Classes.node = Classes.indexes.node[start_node]
-#     if end_node in node.edges_list:
-#         return [start_node,end_node]
-#     for incident_node in node.edges_list:
-#         if incident_node not in used_nodes:
-#             res = req_find(incident_node,end_node,used_nodes)
-#             if len(res) > 0:
-#                 res.insert(0,start_node)
-#                 return res
-#     return []
+def req_find(start_node, end_node, used_nodes: list,without_smp):
+    used_nodes.append(start_node)
+    node: Classes.node = Classes.indexes.node[start_node]
+    if end_node in node.edges_list:
+        if not without_smp or node.edges_list[end_node].ice_condition == 0:
+            return [start_node,end_node]
+    for incident_node in node.edges_list:
+        if incident_node not in used_nodes:
+            if not without_smp or node.edges_list[incident_node].ice_condition == 0:
+                res = req_find(incident_node,end_node,used_nodes,without_smp)
+                if len(res) > 0:
+                    res.insert(0,start_node)
+                    return res
+    return []
 
 
 
 
 def alorithm(cargo: Classes.consignment, without_smp):
-    res = req_find(cargo.id_refer, cargo.node_destination_id, cargo, without_smp)
+    res = req_find(cargo.id_refer,cargo.node_destination_id,[],without_smp)
+    #res = req_find(cargo.id_refer, cargo.node_destination_id, cargo, without_smp)
     if len(res) > 0:
         del res[0]
     return res  #  возвращай список id нод
@@ -32,7 +34,7 @@ def alorithm(cargo: Classes.consignment, without_smp):
 
 # ну штош, щас будем реально кодить big cringe
 
-def req_find(start_node, end_node, cargo, without_smp):
+def req_find1(start_node, end_node, cargo, without_smp):
     graph = generate_graph(cargo.cargo_type == "oil", without_smp)
 
     open_list = [graph[start_node]]
@@ -84,26 +86,14 @@ def req_find(start_node, end_node, cargo, without_smp):
 
 # тут собираем инфу о графе из инфы о ребрах специально для алгоритма и если груз это oil то еще добавляем в граф трубопровод
 def generate_graph(is_oil, without_smp):
-    graph = {i: Node(id=i) for i in range(len(nodes_default))}
+    graph = {id: Node(id=id) for id in Classes.indexes.node}
 
-    for edge in edges_default:
-        a, b = edge[0], edge[1]
-        graph[a].neighbours.append(b)
-        graph[b].neighbours.append(a)
-
-    if not is_oil:
-        graph.pop(43)
-        graph.pop(44)
-
-    if without_smp:
-        for i in range(0, 21):
-            graph.pop(i)
-        graph[36].neighbours.remove(0)
-        graph[23].neighbours.remove(20)
-        graph[37].neighbours.remove(3)
-        graph[42].neighbours.remove(20)
-
-
+    for edge_id in Classes.indexes.edges:
+        edge: Classes.edges = Classes.indexes.edges[edge_id]
+        if (is_oil or edge.count_cargo != "oil")\
+            and (not without_smp or edge.ice_condition == 0):
+            graph[edge.id_begin_node].neighbours.append(edge.id_end_node)
+            graph[edge.id_end_node].neighbours.append(edge.id_begin_node)
     return graph
 
 
@@ -146,11 +136,8 @@ class Node:
         self.h = 0
         self.f = 0
 
-    # def __eq__(self, other):
-    #     return self.position == other.position
-
-
-gr = generate_graph(False)
+"""
+gr = generate_graph(False,False)
 for i in range(len(gr)):
     print(gr[i].neighbours)
-
+"""

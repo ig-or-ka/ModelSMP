@@ -5,6 +5,18 @@ from time import sleep
 Classes.full_info()
 Classes.preparing()
 
+def add_ship_cargo_edge(ship:Classes.ship, edge:Classes.edges):
+    edge.count_cargo += len(ship.cargos)
+    for cargo in ship.cargos:
+        edge.weight_cargo += cargo.size
+    print(f"Загрузка ребра {edge.edge_id}: {edge.count_cargo} {edge.weight_cargo}")
+
+def remove_ship_cargo_edge(ship:Classes.ship, edge:Classes.edges):
+    edge.count_cargo -= len(ship.cargos)
+    for cargo in ship.cargos:
+        edge.weight_cargo -= cargo.size
+    print(f"Загрузка ребра {edge.edge_id}: {edge.count_cargo} {edge.weight_cargo}")
+
 def is_wait_icebreaker(start_node:Classes.node, edge:Classes.edges):
     if edge.id_begin_node == start_node.node_id:
         end_node_id = edge.id_end_node
@@ -96,6 +108,11 @@ def cargos_move():
                 if next_edge.edge_type == "pipe" and cargo.cargo_type != "oil":
                     print("error wrong way edge type")
                     continue
+                
+                # edit cargo on edge count
+                next_edge.count_cargo += 1
+                next_edge.weight_cargo += cargo.size
+                print(f"Загрузка ребра {next_edge.edge_id}: {next_edge.count_cargo} {next_edge.weight_cargo}")
 
                 cargo.type_refer = 2
                 cargo.id_refer = next_edge.edge_id
@@ -110,7 +127,11 @@ def cargos_move():
             cargo.coordinates += 100 / this_edge.length * vec
             print(f'Груз {cargo_id} на ребре {this_edge.edge_id} {cargo.coordinates}')
             if abs(cargo.coordinates) >= 100:
-                #груз прибыл на узел назначения                
+                #груз прибыл на узел назначения
+                # edit cargo on edge count
+                this_edge.count_cargo -= 1
+                this_edge.weight_cargo -= cargo.size
+                print(f"Загрузка ребра {this_edge.edge_id}: {this_edge.count_cargo} {this_edge.weight_cargo}")
                 cargo.type_refer = 1
                 if cargo.coordinates > 0:
                     cargo.id_refer = this_edge.id_end_node
@@ -180,6 +201,8 @@ def ships_move():
                     else:
                         ship.way.insert(0,next_node_id)
                 else:
+                    # edit cargo on edge count
+                    add_ship_cargo_edge(ship,next_edge)
                     this_node.allow_ships[ship.cargo_type].remove(ship)
                     ship.in_port = False
                     ship.edge_id = next_edge.edge_id
@@ -195,7 +218,9 @@ def ships_move():
             ship.coordinates += 100 / this_edge.length * vec
             print(f'Корабль {ship_id} на ребре {this_edge.edge_id} {ship.coordinates}')
             ship.update()
-            if abs(ship.coordinates) >= 100:                
+            if abs(ship.coordinates) >= 100:
+                # edit cargo on edge count
+                remove_ship_cargo_edge(ship,this_edge)
                 if ship.coordinates > 0:
                     this_node_id = this_edge.id_end_node
                 else:
@@ -220,6 +245,8 @@ def ships_move():
                     this_node.allow_ships["iceb"].remove(iceb)
                     
                     for ship in iceb.caravan_ships:
+                        # edit cargo on edge count
+                        add_ship_cargo_edge(ship,next_edge)
                         this_node.allow_ships[ship.cargo_type].remove(ship)
                         ship.in_port = False
                         ship.update()
@@ -245,6 +272,8 @@ def ships_move():
 
                 # разгрузка кораблей
                 for ship in iceb.caravan_ships:
+                    # edit cargo on edge count
+                    remove_ship_cargo_edge(ship,this_edge)
                     ship.caravan_condition = False
                     unloading_ship(ship,this_node)
                 iceb.caravan_ships = []
