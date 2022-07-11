@@ -30,6 +30,8 @@ def move_edge_weight(edge:Classes.edges):
         weight = edge.count_cargo + 1
     if weight != edge.edge_width:
         edge.edge_width = weight
+    while GUI.app == None:
+        pass
     GUI.app.redraw_edge(edge)
 
 def is_wait_icebreaker(start_node:Classes.node, edge:Classes.edges):
