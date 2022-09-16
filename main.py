@@ -6,7 +6,7 @@ from LaunchScreen import GUI
 Classes.full_info()
 Classes.preparing()
 GUI.start()
-GUI.selected_cargo = Classes.indexes.consignment[3]
+GUI.selected_cargo = Classes.indexes.consignment[1]
 
 def add_ship_cargo_edge(ship:Classes.ship, edge:Classes.edges):
     edge.count_cargo += len(ship.cargos)

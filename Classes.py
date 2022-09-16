@@ -314,6 +314,7 @@ def preparing():
             node_b: node = indexes.node[iceb.port_id]
             node_b.allow_ships["iceb"].append(iceb)
             
+            print(node_b.edges_list)
             caravan_edge: edges = node_b.edges_list[iceb.node_destination_id]
         else:
             caravan_edge: edges = indexes.edges[iceb.edge_id]
